@@ -1,0 +1,61 @@
+r"""
+Rigorous certified verification of the hypothesis field
+`Hypotheses.NumericCertificates.ehalf_bound`, read off by the theorem
+`Jensen.JensenBounds.Ehalf_bound` and used there to derive `Ctilde1_lt`:
+
+    3 * Real.exp(1) * Ehalf / (2 * pi) < 1.1343755
+
+where `Ehalf := integral_0^{pi/2} cos(theta)^(3/2) dtheta` (JensenBounds.lean's `Ehalf`).
+The margin is about 1.1e-8 and the bound needs nine digits of `Gamma(1/4)`, which Mathlib
+cannot enclose; that is why this is a certificate rather than a Lean proof.
+
+`Ctilde1 alpha B = 3 * Ehalf * exp(1) * B * alpha^(3/2) / 2`, so
+`Ctilde1 alpha B / pi = (3*exp(1)*Ehalf/(2*pi)) * B * alpha^(3/2)`; since `B, alpha^(3/2) > 0`,
+`Ctilde1_lt` (`Ctilde1 alpha B / pi < 1.1343755 * B * alpha^(3/2)`) follows from the bound
+verified here by pure algebra (done in Lean, not here).
+
+Ehalf has the classical closed form (a Beta-function evaluation)
+
+    Ehalf = (1/2) * Beta(5/4, 1/2) = (1/2) * Gamma(5/4) * Gamma(1/2) / Gamma(7/4)
+          = Gamma(1/4)^2 / (6 * sqrt(2*pi))
+
+(both forms are computed independently below via certified ball arithmetic and checked to
+agree to ~90 digits, as a cross-check on the closed form itself; a naive complex contour
+quadrature of the defining integral was also tried but is unreliable here because
+cos(theta)^(3/2) has a branch point at theta = pi/2 where cos vanishes, which breaks arb's
+assumption of analyticity in a complex neighbourhood of the contour -- so we rely on the
+closed form, not numerical integration, for Ehalf itself).
+
+This corrects the source paper, which prints `1.134375` (without noting it needs a `/pi`, and
+truncating rather than rounding up) -- see JensenBounds.lean's comment immediately above
+`Ctilde1_lt` for the full discussion; `1.1343755` is the smallest "round" constant of this
+form found to work with a comfortable margin.
+
+`Code/indep_mpmath_constants.py` block [A] re-checks the same value independently in mpmath,
+by all three routes (Beta function, direct tanh-sinh quadrature, the Gamma(1/4) closed form).
+
+Run with:  sage Code/verify_Ehalf_bound.sage
+"""
+
+RBF = RealBallField(300)
+
+# Ehalf via the Gamma(1/4)^2/(6 sqrt(2pi)) closed form.
+g14 = RBF(1) / 4
+Ehalf_closed = g14.gamma() ** 2 / (6 * (2 * RBF.pi()).sqrt())
+
+# Cross-check via the Beta-function form (1/2) B(5/4, 1/2) = (1/2) Gamma(5/4)Gamma(1/2)/Gamma(7/4).
+Ehalf_beta = (RBF(1) / 2) * (RBF(5) / 4).gamma() * (RBF(1) / 2).gamma() / (RBF(7) / 4).gamma()
+
+print("Ehalf (Gamma(1/4)^2/(6 sqrt(2pi))):", Ehalf_closed)
+print("Ehalf (Beta-function cross-check):", Ehalf_beta)
+print("The two closed forms agree:", bool((Ehalf_closed - Ehalf_beta).contains_zero()))
+
+val = 3 * RBF(1).exp() * Ehalf_closed / (2 * RBF.pi())
+target = RBF('1.1343755')
+
+print()
+print("3*e*Ehalf/(2*pi) =", val)
+print("target            =", target)
+print("margin (target - value):", target - val)
+print("Ctilde1_lt's numerical hypothesis (3*e*Ehalf/(2*pi) < 1.1343755) verified:",
+      bool(val.upper() < target.lower()))

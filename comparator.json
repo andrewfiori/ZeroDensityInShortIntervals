@@ -1,0 +1,14 @@
+{
+  "challenge_module": "Challenge",
+  "solution_module": "Solution",
+  "theorem_names": [
+    "ZeroDensityShortIntervals.zero_density_jensen",
+    "ZeroDensityShortIntervals.zero_density_littlewood",
+    "ZeroDensityShortIntervals.edge_proportion_jensen",
+    "ZeroDensityShortIntervals.edge_proportion_littlewood",
+    "ZeroDensityShortIntervals.positive_proportion_in_middle_band",
+    "ZeroDensityShortIntervals.positive_proportion",
+    "ZeroDensityShortIntervals.positive_proportion_sixteenth"
+  ],
+  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
+}

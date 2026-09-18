@@ -1,0 +1,349 @@
+================================================================================
+ASSUMPTIONS  --  ZerosInShortIntervals
+================================================================================
+What this development takes on faith, what it proves outright, and how to tell
+which is which.
+
+WHAT THIS FILE IS.  The complete inventory of what the Lean does not prove.  Each
+entry says what is assumed, which class field carries it, where it comes from,
+and -- for the numerical ones -- which script certifies it, to what margin, and
+what would be needed to prove it inside Lean instead.  The mathematics, the
+subtleties and any divergence from the paper live in the docstring of the
+declaration named; every row here is a pointer to one.
+
+  ##############################################################################
+  THERE IS NO `axiom` AND NO `sorry` IN THIS DEVELOPMENT.
+  ##############################################################################
+
+    lake build: 8738 jobs, 0 errors, 0 declarations use `sorry`, 0 axioms.
+    `#print axioms` on every headline result returns exactly
+    [propext, Classical.choice, Quot.sound].
+
+  That is a statement about SHAPE, not about certainty.  Twenty-seven things are
+  assumed; they are fields of six hypothesis classes rather than `axiom`
+  declarations, so every result that depends on one says so in its own type
+  instead of hiding the dependence behind `#print axioms`.
+
+    class                        fields  kind         declared in
+    ---------------------------  ------  -----------  ----------------------------
+    LiteratureInputs               12     literature   Hypotheses.lean
+    BrentStirlingInputs           2+4     literature   Background/ExternalFacts.lean
+    NumericCertificates             2     numeric      Hypotheses.lean
+    LaurentCertificate              1     numeric      Background/LogDerivZetaLaurent.lean
+    InterpolationCertificates       3     numeric      Background/BackgroundZetaBounds.lean
+    Hcompact2Certificates           5     numeric      Background/BackgroundZetaBounds.lean
+    ZeroDensityHypotheses      (bundle)                AllHypotheses.lean
+
+  Twenty-nine fields: two of Brent's are DATA, naming his two remainder functions
+  and asserting nothing, so twenty-seven are assertions -- sixteen literature,
+  eleven numerical.
+
+  Each class is declared at the first point in the import graph where its
+  statements can be written, which is why they are six and not one.
+  `ZeroDensityHypotheses` bundles all six for the headline statements and for the
+  Palomar submission pair.
+
+  WHY LITERATURE AND NUMERICS ARE KEPT APART.  The first are published, refereed
+  mathematics that this project claims only to have transcribed correctly; a
+  reader who doubts one should go and read the paper.  The second are finite
+  computations run outside Lean in arb ball arithmetic or mpmath; a reader who
+  doubts one should re-run the script.  Those are different kinds of doubt and a
+  reader is entitled to weigh them differently.
+
+WHERE THE PROVENANCE LIVES.  On the theorem, not here.  Every assumption is
+consumed through a theorem of the same name whose body reads the class field, and
+that theorem keeps the full docstring: the citation, the edition checked, any
+discrepancy found while checking it, the certifying script.  Each class field
+carries a one-to-three line pointer back to that theorem.  This file is the index.
+
+HOW TO SEE WHAT A RESULT ASSUMES.  Look at its signature.  A result that needs
+nothing carries no `[...]` binder; a result that needs the development's inputs
+carries the classes.  One caveat, in PART 4 below: Lean's section variables make
+that test conservative, so a binder does not prove the result really uses it.
+
+
+################################################################################
+PART 1 -- THE ELEVEN NUMERICAL CERTIFICATES
+################################################################################
+Each is true, each is verified outside Lean, and none is provable inside Lean
+today.  They share one barrier: Mathlib has no verified evaluation of the Riemann
+zeta function, nor a sharp enclosure of Gamma(1/4), and the margins below rule out
+anything cruder.  Scripts are in `Code/`.
+
+  field                             class                      claim
+  --------------------------------  -------------------------  ---------------------------------
+  integral_log_zeta_Ioi_one_lt      NumericCertificates        Phi(1) = int_1^oo log|zeta(x)| dx
+                                                               < 1.7975699586287395
+      certified by  arb quadrature, `Code/verify_Phi_one_bound.sage`; the pole at s = 1 and the
+                    tail are handled by hand, since neither is directly quadrable.
+                    Independently `Code/indep_mpmath_constants.py` [B]
+      margin        9.2e-17 -- far below what norm_num-style real arithmetic in Lean can certify
+      consumed by   `Jensen/RectangularBounds.integral_log_zeta_Ioi_one_lt`
+
+  ehalf_bound                       NumericCertificates        3e*E_{1/2}/(2 pi) < 1.1343755,
+                                                               E_{1/2} = (1/2) B(5/4, 1/2)
+      certified by  arb, from the closed form Gamma(1/4)^2 / (6 sqrt(2 pi));
+                    `Code/verify_Ehalf_bound.sage`, independently `indep_mpmath_constants.py` [A]
+      margin        1.1e-8, and it needs nine digits of Gamma(1/4), which Mathlib cannot enclose
+      consumed by   `Jensen/JensenBounds.Ehalf_bound`
+
+  logDerivZetaG_boundary_bound      LaurentCertificate         |G(1+z)| <= 0.6 on the boundary of
+                                                               the box (-7,7)^2, G = zeta'/zeta
+                                                               regularised
+      certified by  mpmath on the boundary, `Code/indep_mpmath_lemma37.py` block [A], 1604 points,
+                    observed maximum 0.59002; independently `Code/verify_lemmaA7_bound_radius7.sage`
+                    at 6000 points per edge.  The script's name records an older number for
+                    `lemma:logderzetabound`, which is Lemma 38.
+      margin        0.010
+      blocker       arb has no ball arithmetic for zeta', so this one is mpmath only and is the
+                    least certified of the eleven
+      consumed by   `Background/LogDerivZetaLaurent.logDerivZetaG_boundary_bound`
+
+  interpolated_bound_1a_hcompact    InterpolationCertificates  sup |(s-1) zeta(s)| against the
+  interpolated_bound_1b_hcompact                               G-product on the compact windows
+  interpolated_bound_1c_hcompact                               |t| <= 4e+1 and |t| <= 3, for
+                                                               sigma in [1/2, 5/7]
+      certified by  arb-certified boxes, `Code/indep_arb_hcompact.sage`, which prints ALL
+                    CERTIFIED; 125 boxes for (1a), 264 for (1b), 137 for (1c)
+      cross-check   `Code/indep_mpmath_hcompact.py`, pointwise and in floating point
+      consumed by   the three theorems of the same names in `Background/BackgroundZetaBounds`
+
+  hcompact2_four                    Hcompact2Certificates      the same interpolation on the k-th
+  hcompact2_five                                               sub-strip of the critical strip,
+  hcompact2_six                                                |t| <= 3, for k = 4, 5, 6, 7 and
+  hcompact2_seven                                              then all k >= 8 at once
+  hcompact2_tail
+      certified by  arb-certified boxes, `Code/indep_arb_hcompact.sage`; 292 / 302 / 588 / 926
+                    boxes for k = 4..7, and 232 for the tail
+      how the tail  a k-uniform lower bound on the right-hand side covers every k >= 8 in one
+                    statement, so the family is finite
+      consumed by   the five theorems of the same names in `Background/BackgroundZetaBounds`
+
+  A NOTE ON WHICH SCRIPT TO TRUST for the eight `_hcompact` obligations.
+  `Code/indep_arb_hcompact.sage` is the certificate.  It was written from the Lean statements
+  rather than from the earlier `verify_hcompact_boxes.sage`, which remains in the tree as an
+  independent finite recheck rather than as the evidence.  Its method is worth knowing before
+  re-running it: applying arb's zeta directly to a box ball is valid but far too
+  loose to certify case (1b) at any depth, so the left-hand side is enclosed by a second-order
+  Taylor expansion about the box centre with the `zeta''` remainder taken over the whole box, and
+  the right-hand side uses that `log RHS` is affine in sigma at fixed t, so its infimum is at an
+  endpoint.
+
+WHAT WOULD REMOVE THESE.  Certified interval arithmetic for zeta inside Mathlib,
+and an enclosure of Gamma(1/4).  Neither exists.  Until then the scripts are the
+evidence and the docstrings cite them; there is no partial credit to be had by
+weakening the constants, because the margins are what they are.
+
+
+################################################################################
+PART 2 -- THE SIXTEEN LITERATURE INPUTS
+################################################################################
+Each is a published result, transcribed.  The sources are not redistributed
+here; `refs.bib` and the docstring of the theorem that consumes each one carry
+its DOI or arXiv identifier.  The column on the right says which headline result
+reaches it.
+
+  field                                   source                     reaches
+  --------------------------------------  -------------------------  ------------------
+  revers_subconvexity_bound               Revers                     Thm 2, Thm 3
+  yang_critical_strip_bound               Yang, Thm 1.1              Thm 2, Thm 3
+  bellotti_richert_bound                  Bellotti (Richert)         Thm 2, Thm 3
+  leong_log_zeta_one_bound                Leong, Thm 4               Thm 3
+  fiori_phragmenLindelof                  Fiori, JMAA 559, Thm 7     Thm 2, Thm 3
+  platt_trudgian_verified_below           Platt-Trudgian             Thm 2, Thm 3
+  brent_stirling_expansion                Brent, Eq. (2.1)           Thm 2, Thm 3
+  brent_stirling_remainder_bound          Brent, Cor. 2.2 at k = 2   Thm 2, Thm 3
+  riemannZeta_lowest_zero_height          classical (14.1347...)     Thm 3
+  bellotti_wong_cor_1_3                   Bellotti-Wong, Cor. 1.3    Cor 1, 4, 5 only
+  hiary_eq_3_23                           Hiary-Patel-Yang, (3.23)   nothing
+  revers_remark31                         Revers, Remark 3.1         nothing
+  patel_yang_subweyl_bound                Patel-Yang                 nothing
+  farzanfard_zero_density_interval        Farzanfard, MSc thesis     nothing
+  brent_stirling_shifted_expansion        Brent, Eq. (3.4)           Lemma 37 only
+  brent_stirling_shifted_remainder_bound  Brent                      Lemma 37 only
+
+  Plus two DATA fields that assert nothing, naming Brent's two remainder
+  functions so that his expansions can be stated: `remainder` and
+  `shiftedRemainder`.  `BrentStirlingInputs` is the one class that is therefore
+  not `Prop`-valued.  Those two are the only fields for which no script is
+  possible; the twelve `LiteratureInputs` fields have none by design, being
+  transcribed theorems rather than computations.
+
+  THE FOUR BRENT ASSERTIONS ARE THE EXCEPTION TO THAT, and are checked:
+  `Code/indep_mpmath_constants.py` block [J] and `Code/verify_argGamma.py` section
+  (G) both test `shifted_remainder_bound` numerically, and
+  `Code/verify_brent_family_consistent.py` checks the whole family for mutual
+  consistency -- a satisfiability check, not a numeric certificate, but it would
+  catch a transcription error that made the four incompatible.
+
+  THE FOUR THAT REACH NOTHING are kept deliberately.  Three are sharper
+  half-line bounds than the one actually used and are the natural place to start
+  if the constants are ever re-optimised; the fourth, Farzanfard, covers the
+  `h > t^{2/3}` regime that the current statements do not enter.  They are in
+  the bundle, so they weaken every statement that carries it by a hair.  That is
+  the price of one bundle rather than seven, and it is recorded in the
+  submission metadata rather than hidden.
+
+  WHICH RESULT REACHES WHICH FIELD is recorded above from the state of the
+  proofs, and the proofs have not changed since it was determined.  Be aware
+  that it is not MECHANICALLY checkable: `#print axioms` separates axioms, but
+  it does not separate the fields of a class.  Treat the right-hand column
+  as documentation, not as a verified fact, and re-derive it by experiment if
+  something depends on it.
+
+
+################################################################################
+PART 3 -- WHAT IS PROVED WITHOUT ANY ASSUMPTION
+################################################################################
+Five blocks carry no hypothesis-class binder at all, verified by `#check`.  Each
+is deliberate and two of them are load-bearing.
+
+  * The `logGammaAnalytic` development in `Background/ExternalFacts.lean`.  The
+    analytic branch of log Gamma is DEFINED as the Weierstrass series and
+    `exp_logGammaAnalytic` proves that its exponential is Gamma on the slit
+    plane, so Brent's expansions are faithful statements about a function this
+    project constructs rather than about an opaque name.
+
+  * `exists_large_nat_cos_ge_half` and `backlund_trick`, also in
+    `ExternalFacts.lean`, proved outright from Dirichlet's approximation theorem.
+
+  * The whole of `Littlewood/ArgIntegrals.lean`, which declares no hypothesis
+    `variable`.  `backlund_trick` was its only external input, so closing the
+    `[LiteratureInputs]` section before Backlund's trick made the entire file
+    unconditional: `arg_integrals` (Theorem 31), `integralofarg` (Lemma 28),
+    `argSupConst_le_of_le` (Lemma 29) and `deltaArg_bound_finite_N` all depend on
+    nothing but the three standard Lean axioms.
+
+  * The order-of-vanishing half of `Reflection.lean`: `zetaOrd_reflect` and the
+    lemmas it rests on.  The functional equation's multiplier is analytic and
+    zero-free off the real axis, so the reflection rho -> 1 - conj rho preserves
+    the order of vanishing, and the two edge strips of a window carry equally
+    many zeros.  That is the factor of two in every proportion statement, which
+    the paper leaves implicit.
+
+  * The analytic limits at the head of `PositiveProportion.lean`:
+    `tendsto_loglog_div_log`, `tendsto_one_div_log`,
+    `tendsto_one_div_rpow_mul_log`, `tendsto_C2LittlewoodP`, `tendsto_C2denomS`,
+    and the arithmetic lemma `four_mul_A1_half_lt_one`.
+
+  THE SECOND AND THIRD ARE LOAD-BEARING.  `arg_integrals` is the paper's own
+  technical contribution and the intended standalone registry submission, which
+  requires that its statement carry no binder -- the hypothesis classes have no
+  instances, so a caller cannot supply one.  Adding a file-level `variable [...]`
+  to `ArgIntegrals.lean`, or moving the `end` in `ExternalFacts.lean` back down
+  past `backlund_trick`, would break that silently: the build still succeeds.
+  Both files carry a comment saying so.
+
+WHAT THE NUMERICAL CERTIFICATES ARE NOT LOAD-BEARING FOR.  The positivity of
+Corollary 1's constant.  It looks numerical -- the tables are what exhibit
+C_2^L < 1/2 -- but the paper states Corollary 1 for "h_0 and t_0 sufficiently
+large", and that existential makes the sign provable outright.  Every term of
+C_2^L except the leading 2 A_1 carries a factor 1/h, 1/log t or log log t / log t,
+and the denominator tends to 1, so C_2^L -> 2 A_1.  Nothing has to be BOUNDED for
+that: A_2 .. A_6 are built from c_1 .. c_4, Phi and log|zeta|, whose values this
+development never pins down, but they are real numbers, and a real number over h
+tends to zero.  What is left is 4 A_1 < 1, and the radius r = 1/2 discharges it
+for every admissible alpha: sigma_0 = 1/2 exactly, so the evaluation point 1 - r
+lands on a chord ENDPOINT, the interpolation collapses to the tabulated
+v_0 = 1/6 whatever the slope, and 4 A_1 = (1/3)/(1/2 - alpha) < 1 is precisely
+alpha < 1/6.  `PositiveProportion.lean` carries this.  The tables still give the
+numerical VALUES of the constant; they are not load-bearing for its sign.
+
+  r = 1/2 is the choice that always works, not the best one: at alpha = 1/16,
+  r = 1/5 gives a limiting constant 9/25 against r = 1/2's 5/21.  It is sharp at
+  the endpoint -- at alpha = 1/6 it gives limiting constant exactly 0, and no
+  other radius does better there -- so the paper's strict alpha < 1/6 is not an
+  artefact of the method.
+
+
+################################################################################
+PART 4 -- ONE COST OF THE CLASS SHAPE, RECORDED
+################################################################################
+Lean includes an instance-implicit section variable in every THEOREM of a file
+that declares one, whether or not the proof uses it.  Definitions are unaffected;
+that was checked.  So many internal lemmas carry binders they do not need.  They
+are still true, merely stated under an unused hypothesis, but it means a binder
+is not evidence that a result really depends on the class.
+
+Precision was recovered where it matters and not elsewhere:
+
+  * the headline results are restated in `AllHypotheses.lean` under the single
+    bundled binder;
+  * the five blocks of PART 3 are scoped out of the variables with `section` /
+    `end`, with the file's `variable` line outside the bracket.
+
+Per-declaration `omit [C] in` does NOT work for this and should not be retried
+lemma by lemma: it fails whenever the proof calls a lemma that itself carries the
+binder, which in practice is almost always.  It also has to precede the
+docstring, like `open ... in`.  The working technique is the `section` bracket.
+
+`set_option linter.unusedSectionVars false` silences the resulting warnings; each
+file that sets it says why.
+
+
+################################################################################
+PART 5 -- CONVENTIONS THAT ARE EASY TO GET WRONG
+################################################################################
+COUNTING ZEROS.  Every count is with multiplicity, as a sum of
+`MeromorphicOn.divisor riemannZeta` over a region.  `Nrect T1 T2 alpha` counts
+`T1 < Im rho <= T2` with `Re rho > 1 - alpha`: the half-open window and the RIGHT
+edge strip.  `Nhalf` is the paper's page-one convention, the same count with a
+zero on either horizontal edge weighted one half; `NhalfMid` is the middle band
+`alpha <= Re rho <= 1 - alpha`.  `Nhalf T1 T2 1` is the count over the whole
+strip, since `1 - 1 < Re rho` holds for every nontrivial zero.
+
+THE k = 0 CHORD, WHICH IS THE ONE PLACE THE LEAN AND THE TABLES DISAGREE.  The
+paper's main text anchors the piecewise-linear majorant at k = 0 with
+(v_0, v_0', v_0'') = (1/6, 1, log 0.611), and Remark \ref{rem:altcoefficients}
+(Remark 7) offers (27/164, 0, log 66.7) as an admissible alternative.  The Lean
+uses the MAIN TEXT's; `Code/compute_C2_tables.sage` uses the REMARK's, so every
+generated table does too.  For k >= 1 the two agree, so only results that reach
+the k = 0 chord are affected -- which in practice means r = 1/2 and the alpha
+near 1/6 end of the tables.
+
+This matters for one headline fact.  `PositiveProportion.four_mul_A1_half_lt_one`
+proves 4 A_1(alpha, 1/2, 0) = (1/3)/(1/2 - alpha) < 1 iff alpha < 1/6, matching
+the paper's stated hypothesis, precisely because Lean has v_0 = 1/6.  Under the
+Remark's triple the same computation gives 4 A_1 = (27/41)/(1 - 2 alpha) < 1 iff
+alpha < 7/41 = 0.1707.  Both are true statements about their own triple.  Which
+one the paper means is an open question for the author; the Lean can follow
+either, and only the k = 0 chord would change.
+
+TEX NUMBERING.  `ZerosInShortIntervals.aux` is authoritative; each line
+reads `\newlabel{name}{{number}{page}...}`.  Current headline numbers: Corollary 1
+(`cor:simpmain`), Theorem 2 (Jensen), Theorem 3 (Littlewood), Corollary 4,
+Corollary 5, Theorem 32 (`thm:littlewoodshort`), Lemma 38
+(`lemma:logderzetabound`), Table 1 (`table:chat`).  Docstrings cite label and
+number together, as ``Theorem `\ref{thm:main-littlewood}` (Theorem 3)``.
+
+RENUMBERING, IF THE PAPER GAINS ANOTHER FRONT-MATTER ENVIRONMENT.  Theorem,
+corollary, proposition, lemma and remark share one counter, so inserting one at
+the front moves them all; equations, sections, definitions and tables have their
+own.  Every result the Lean cites carries a `\label`, so the new numbers can
+be read out of the `.aux` rather than reconstructed by counting.  Do not do it
+with a regex over the prose: that was tried, and it produced two silent
+near-misses -- a decimal reference whose leading digit matched, and a reference
+ending a sentence that a character class dropped from the review list.  Whatever
+the method, note that a `lake build` does NOT verify a renumbering, because every
+number in a `.lean` file sits inside a comment.
+
+WORKING PRACTICE.
+  * Run a bare `lake build` with no target after every change; downstream
+    breakage is invisible otherwise.
+  * Do not run several agents at once on files that share an import ancestor.
+  * `git add` named files, never a directory.
+  * Verify a premise before building on it.  Several claims that looked safe
+    turned out false and were caught only because they were checked.
+
+
+################################################################################
+PART 6 -- WHERE ELSE TO LOOK
+################################################################################
+  Assumptions.txt            this file: what is assumed
+  Challenge.lean             the submitted statements, over Mathlib alone
+  Solution.lean              the same, proved from this development
+  formalization.yaml         submission metadata: sources, licence, scope,
+                             divergences, review status
+  refs.bib                   the bibliography: DOI or arXiv id for every PART 2
+                             source
+  Code/                      the scripts behind PART 1, and the table generators

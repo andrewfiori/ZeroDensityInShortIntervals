@@ -1,0 +1,426 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+#
+# Every judgement call has been settled by the author: the cost figures, the endorsement field
+# and the review status.  Two placeholders remain, both marked "TODO(arXiv)", and must be filled
+# in once the preprint is posted -- grep for that tag.
+# Everything else is drawn from the repository and can be checked against it.
+version: "v0.4"
+
+project:
+  name: "Zero density theorems for short intervals"
+  description: >-
+    Explicit zero-density results for the Riemann zeta function in short intervals, formalized in
+    Lean 4 over Mathlib.  Count the nontrivial zeros whose imaginary part lies in a window
+    (t-h, t+h], with multiplicity and with a zero on either horizontal edge counted for half.
+
+    Seven statements are submitted, and all seven are mechanically checked.  Two are zero-density
+    bounds for the edge strip Re s > 1-alpha, valid for 0 <= h <= t^(2/3), proved by two different
+    mechanisms -- Jensen's formula and Littlewood's lemma, the source's Theorems 2 and 3.  Neither
+    dominates the other over the whole parameter range.  Two turn those into bounds on the fraction
+    of the window's zeros lying in that strip, and are antitone in both h0 and t0, so one
+    evaluation bounds every larger window: Corollaries 4 and 5.  The remaining three are the
+    headline corollary, Corollary 1 -- for every alpha in (0, 1/6) there are h0 and t0 beyond which
+    a definite fraction of the window's zeros, bounded below by an explicit POSITIVE constant, have
+    real part in the middle band [alpha, 1-alpha], away from both edges of the critical strip.  One
+    states it with the constant named, one with the constant existentially quantified as the source
+    phrases it, and one at the explicit parameters alpha = 1/16 with a sharper radius, where the
+    limiting constant is 9/25.
+
+    The positivity is proved, not assumed, and needs no numerics: every term of the constant except
+    the leading one carries a factor 1/h or 1/log t, so it tends to a limit fixed by one rational
+    inequality, which the radius 1/2 discharges for every admissible alpha.  The factor of two
+    relating the two edge strips is the reflection rho -> 1 - conj(rho), proved in the development
+    to be a multiplicity-preserving involution of the zero set.
+
+    The results are conditional and their hypotheses are in the signature, not hidden.  They are of
+    two kinds, kept apart in the development because a reader is entitled to weigh them
+    differently.  Sixteen are published explicit bounds on zeta and Gamma transcribed from other
+    authors; eleven are finite numerical certificates established outside Lean by arb ball
+    arithmetic or mpmath on explicit compact boxes, which Mathlib cannot currently reproduce
+    because it has no verified evaluation of zeta and the margins reach 9e-17.  The source's tables
+    give the numerical values of the constant; they are not load-bearing for its sign.
+
+    `comparator.json` names exactly those seven and is the authority on what is checked.  Beyond
+    them, the wider development supplies what they rest on: the Littlewood short-interval theorem
+    (Theorem 32), the argument-integral machinery (Theorem 31), the appendix of explicit zeta
+    bounds, the Laurent expansion of zeta'/zeta, and the reflection step.
+  authors:
+    - "Andrew Fiori"
+  license: "CC-BY-4.0"
+  responsible_maintainers:
+    - "Andrew Fiori"
+
+# `repository` is deliberately omitted: this repository is the substantive development, not a
+# thin Comparator wrapper.
+
+classification:
+  arxiv: ["math.NT"]
+  msc2020: ["11M26", "11M06", "11Y35", "68V20"]
+
+sources:
+  - title: "Zero Density Theorems for Short Intervals"
+    authors:
+      - "Andrew Fiori"
+    type: "paper"
+    # TODO(arXiv): once the preprint is posted, set `id` to its identifier and delete this
+    # comment.  Spelling: `id: "arXiv:2610.01234"`.  See also the TODO(arXiv) in `note` below,
+    # and step 2.0 of the submission plan, which sequences posting before submitting.
+    location: >-
+      ZerosInShortIntervals.tex in this repository.  The submitted statements formalize its
+      Theorem 2, Theorem 3, Corollary 4, Corollary 5 and Corollary 1 (the last in three forms).
+    relationship: "formalizes"
+    note: >-
+      A preprint by the same author who maintains this formalization, under review at a journal
+      and posted to the arXiv as TODO(arXiv) -- until that identifier is filled in, the only
+      public form of the paper is the LaTeX source committed here.  The formalization found and
+      corrected a number of typographical errors, grammatical errors and missing implicit
+      hypotheses in it, and the numerical tables in the current version were produced by code
+      written during the formalization.
+    license: "CC-BY-4.0"
+    author_endorsement: "participated"
+  - title: "New improved explicit estimates for zeta on the half line"
+    authors: ["Michael Revers"]
+    type: "paper"
+    relationship: "background"
+    note: "Assumed as LiteratureInputs.revers_subconvexity_bound and revers_remark31."
+  - title: "Explicit bounds for zeta in the critical strip and a zero-free region"
+    authors: ["Andrew Yang"]
+    type: "paper"
+    relationship: "background"
+    note: "Theorem 1.1, assumed as LiteratureInputs.yang_critical_strip_bound."
+  - title: "Explicit bounds for zeta and a new zero-free region"
+    authors: ["Chiara Bellotti"]
+    type: "paper"
+    relationship: "background"
+    note: "The explicit form of Richert's bound, assumed as LiteratureInputs.bellotti_richert_bound."
+  - title: "Explicit estimates for the logarithmic derivative of zeta"
+    authors: ["Nicol Leong"]
+    type: "paper"
+    relationship: "background"
+    note: "Theorem 4, assumed as LiteratureInputs.leong_log_zeta_one_bound."
+  - title: "An improved explicit estimate for zeta on the half line"
+    authors: ["Ghaith Hiary", "Nicol Patel", "Andrew Yang"]
+    type: "paper"
+    relationship: "background"
+    note: "Equation (3.23), assumed as LiteratureInputs.hiary_eq_3_23."
+  - title: "An explicit sub-Weyl bound for zeta"
+    authors: ["Nicol Patel", "Andrew Yang"]
+    type: "paper"
+    relationship: "background"
+    note: "Assumed as LiteratureInputs.patel_yang_subweyl_bound."
+  - title: "On the accuracy of asymptotic approximations to the log-Gamma and Riemann-Siegel theta functions"
+    authors: ["Richard P. Brent"]
+    type: "paper"
+    relationship: "background"
+    note: >-
+      Equations (2.1) and (3.4) and Corollary 2.2, assumed as the four statements of
+      BrentStirlingInputs about the two remainder functions it also names.
+  - title: "A note on the Phragmen-Lindelof theorem"
+    authors: ["Andrew Fiori"]
+    id: "doi:10.1016/j.jmaa.2026.130404"
+    type: "paper"
+    relationship: "background"
+    note: >-
+      Theorem 7, the multi-function interpolation principle the appendix's zeta bounds are built
+      on, assumed as LiteratureInputs.fiori_phragmenLindelof.  By the same author as the source
+      preprint, but a separate published paper.
+  - title: "The Riemann hypothesis is true up to 3 x 10^12"
+    authors: ["David J. Platt", "Timothy S. Trudgian"]
+    type: "paper"
+    relationship: "background"
+    note: >-
+      Assumed as LiteratureInputs.platt_trudgian_verified_below.  This citation itself rests on a
+      large computation.
+  - title: "Explicit zero density for the Riemann zeta function"
+    authors: ["Golnoush Farzanfard"]
+    id: "https://hdl.handle.net/10133/7053"
+    type: "paper"
+    location: "MSc thesis, University of Lethbridge, 2024"
+    relationship: "background"
+    note: >-
+      Assumed as LiteratureInputs.farzanfard_zero_density_interval.  Used only for a regime none
+      of the submitted statements enters; it is in the hypothesis bundle because the bundle
+      carries the whole development's assumption set.
+  - title: "Counting zeros of Artin L-functions"
+    authors: ["Chiara Bellotti", "Peng-Jie Wong"]
+    type: "paper"
+    relationship: "background"
+    note: >-
+      Corollary 1.3, the Riemann-von Mangoldt formula with an explicit error, assumed as
+      LiteratureInputs.bellotti_wong_cor_1_3.  This is what bounds the denominator of the
+      proportion below.
+  - title: "The Theory of the Riemann Zeta-Function"
+    authors: ["E. C. Titchmarsh"]
+    type: "book"
+    relationship: "background"
+    note: >-
+      Section 9.9, the source for Littlewood's identity.  That identity is proved in the
+      development rather than assumed.
+
+related_formalizations: []
+
+status:
+  scope: >-
+    Formalized and proved: both main theorems (Jensen and Littlewood mechanisms), both
+    corollaries, the Littlewood short-interval theorem, the argument-integral machinery, the
+    appendix of explicit zeta bounds, the Laurent expansion of zeta'/zeta, the reflection step,
+    and the headline Corollary 1 in three forms.
+
+    SEVEN statements are submitted and compared, not one.  Both main theorems
+    (zero_density_jensen for Theorem 2, zero_density_littlewood for Theorem 3), both corollaries
+    (edge_proportion_jensen for Corollary 4, edge_proportion_littlewood for Corollary 5), and all
+    three forms of Corollary 1 (positive_proportion_in_middle_band with the constant named,
+    positive_proportion with it existentially quantified as the source phrases it, and
+    positive_proportion_sixteenth at alpha = 1/16 with the sharper radius r = 1/5).
+    `comparator.json` is the authority and lists exactly these seven; `main_results` below and
+    `alignment.statements` at the end of this file match it declaration for declaration.
+
+    What is NOT submitted is the supporting machinery the seven rest on -- Theorem 32, Theorem 31,
+    the appendix of zeta bounds, the Laurent expansion and the reflection.  Those are proved in
+    the development but Comparator does not check them.
+
+    Not proved, and assumed instead: twenty-three literature bounds and numerical certificates,
+    listed as fields of six hypothesis classes and gathered for this submission into one bundled
+    class that appears in the submitted signature.  The development contains no `axiom` and no
+    `sorry`; every result that depends on an assumption carries it in its type.
+
+    Proved, and worth stating explicitly: the constant is positive, for every
+    alpha in the source's own range (0, 1/6), with no additional hypothesis.  The source states its
+    Corollary 1 for "h0 and t0 sufficiently large", and that existential is what makes positivity
+    provable without numerics.  Every term of C_2 except the leading 2*A1 carries a factor 1/h,
+    1/log t or loglog t / log t and the denominator tends to 1, so C_2 tends to 2*A1; nothing about
+    the sizes of the remaining coefficients is needed, only that they do not depend on h or t.
+    What remains is 4*A1 < 1, and the radius r = 1/2 discharges it outright: the chord abscissa
+    sigma_0 is exactly 1/2, so the evaluation point 1-r is a chord endpoint, the interpolation
+    collapses, and 4*A1 = (1/3)/(1/2 - alpha), which is below 1 precisely when alpha < 1/6.  No
+    interval arithmetic enters any of this.  The tables remain the source of the numerical VALUES
+    of the constant; they are not load-bearing for its sign.
+
+    Each submitted statement assumes the whole development's hypothesis bundle, including fields
+    that particular statement does not use.  That makes each of them slightly weaker than
+    necessary.
+
+    The three Corollary 1 forms depart from the source's shape in one way: eta is quantified by
+    its characterisation rather than constructed.  That is recorded under `fidelity` below.  The
+    radius r is NOT such a departure -- the source's Corollary 1 does not mention r at all, and
+    its one-line proof defers to Corollary 4 or 5 "for the relevant C_2", leaving the choice
+    implicit; naming the constant, as two of the three forms do, is what forces a choice to be
+    made explicit.  The submitted Theorems 2
+    and 3 and Corollaries 4 and 5 keep the source's own shape and hypotheses, with one addition
+    noted under `alignment`: Theorem 3 also requires that zeta not vanish on the two horizontal
+    edges of the enlarged window.
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms: ["propext", "Classical.choice", "Quot.sound"]
+  main_results:
+    - declaration: "ZeroDensityShortIntervals.zero_density_jensen"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator.json"
+    - declaration: "ZeroDensityShortIntervals.zero_density_littlewood"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator.json"
+    - declaration: "ZeroDensityShortIntervals.edge_proportion_jensen"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator.json"
+    - declaration: "ZeroDensityShortIntervals.edge_proportion_littlewood"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator.json"
+    - declaration: "ZeroDensityShortIntervals.positive_proportion"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator.json"
+    - declaration: "ZeroDensityShortIntervals.positive_proportion_sixteenth"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator.json"
+    - declaration: "ZeroDensityShortIntervals.positive_proportion_in_middle_band"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator.json"
+      literature_dependencies:
+        - statement: "Explicit sixth-power and subconvexity bounds for zeta on the critical line"
+          source: "New improved explicit estimates for zeta on the half line"
+        - statement: "Explicit bounds for zeta inside the critical strip"
+          source: "Explicit bounds for zeta in the critical strip and a zero-free region"
+        - statement: "Richert's bound in explicit form"
+          source: "Explicit bounds for zeta and a new zero-free region"
+        - statement: "A lower bound for |zeta(1+it)|"
+          source: "Explicit estimates for the logarithmic derivative of zeta"
+        - statement: "Stirling's expansion with an explicit remainder bound"
+          source: >-
+            On the accuracy of asymptotic approximations to the log-Gamma and Riemann-Siegel theta
+            functions
+        - statement: "A multi-function Phragmen-Lindelof interpolation principle"
+          source: "A note on the Phragmen-Lindelof theorem"
+        - statement: "The Riemann hypothesis verified below height 3 x 10^12"
+          source: "The Riemann hypothesis is true up to 3 x 10^12"
+        - statement: "The Riemann-von Mangoldt formula with an explicit error term"
+          source: "Counting zeros of Artin L-functions"
+
+automation:
+  methods:
+    - method: "agent"
+      models: ["claude-opus-5", "claude-fable-5-1"]
+      framework: "Claude Code"
+      tool_setup: >-
+        AI-assisted proof development, driven from a task list in the repository and reviewed by
+        the author at each step.  The agent wrote the Lean, wrote the Sage and mpmath scripts in
+        Code/ that certify the numerical hypotheses and regenerate the paper's tables, opened and
+        checked each cited paper against the statement transcribed from it, and maintained the
+        audit documents.  Mathematical direction, acceptance of every result and all of the
+        mathematics in the source preprint are the author's.
+      cost:
+        wall_time: "about three weeks of elapsed time"
+        spend_usd: "subscription-based usage; not tracked per task"
+        hardware: "local machine, API-only models"
+      prompting_notes: >-
+        Tasks were given as a written work list, and completed entries were annotated in place, so
+        that list is a running record of what was asked and what was done.
+  spend_usd: "subscription-based usage; not tracked"
+  notes: >-
+    Three checks were applied throughout and are visible in the repository.  Every cited result
+    was read in the original paper before being assumed; every numeric claim was isolated as its
+    own statement and certified by an independent script in Code/, usually twice, once with arb
+    ball arithmetic and once with mpmath; and every declaration carries a docstring recording its
+    proof sketch, its correspondence with the source, and any divergence found.
+
+fidelity:
+  divergences: >-
+    The k = 0 anchor of the piecewise-linear majorant has two admissible values in the source.  The
+    Lean uses the main text's (1/6, 1, log 0.611); the source's displayed tables use the
+    alternative (27/164, 0, log 66.7) given in its Remark 7.  The two agree for
+    every chord index above zero, so they differ only where the circle reaches the k = 0 chord.
+    The consequence is that the Lean's threshold alpha < 1/6 is the main text's, and is the
+    conservative one; the tables' triple would allow alpha < 7/41.
+
+    All three submitted forms of Corollary 1 quantify eta, the unique root of
+    1 + eta + log eta = 0 in (0,1), universally under that characterisation rather than
+    constructing it.  They are therefore slightly more general than the development's version.
+
+    NOT A DIVERGENCE, recorded here because it looks like one.  The source's Corollary 1 has no
+    r in it: it asserts an "explicitly computable positive constant" and its proof takes
+    "the relevant C_2" from Corollary 4 or 5, which do carry r.  So the source leaves the radius
+    implicit, and any statement that names the constant has to choose.
+    positive_proportion_in_middle_band and positive_proportion_sixteenth name it, at r = 1/2 and
+    r = 1/5; positive_proportion leaves the constant existential and so mentions no radius at
+    all, matching the source's phrasing exactly.  r = 1/2 is admissible for every alpha in
+    (0, 1/6), which is what lets the positivity be discharged rather than assumed.  It is not the
+    best radius: positive_proportion_sixteenth gets a limiting constant of 9/25 at alpha = 1/16
+    against r = 1/2's 5/21.  The submitted Corollaries 4 and 5 carry r as a free variable, as the
+    source does, and the library keeps the version parametrised over r and the chord index.
+
+    The Solution module duplicates the Challenge module's definitions verbatim.  That is forced by
+    the submission format, not a mathematical difference: Comparator compares a declaration of the
+    same name in two modules, and a Challenge may import nothing outside Mathlib.
+
+review:
+  # This field is the review status OF THE FORMALIZATION, not of the paper.  The author checked
+  # their own work as it was produced and no one else has; that is exactly `self-assessed`.  The
+  # paper's separate journal review is stated in `notes`, where it cannot be mistaken for a
+  # review of the Lean.
+  status: "self-assessed"
+  reviewers:
+    - "Andrew Fiori"
+  notes: >-
+    No external review of the formalization has been completed.  The author, who is also the
+    author of the source preprint, reviewed it as it was produced.  The paper itself is under
+    review at a journal; that is a separate process and says nothing about the Lean.
+
+alignment:
+  namespace: "ZeroDensityShortIntervals"
+  statements:
+    - source: "Corollary 1 (cor:simpmain)"
+      lean: "ZeroDensityShortIntervals.positive_proportion_in_middle_band"
+      module: "Solution"
+      status: "proved, conditionally"
+      note: >-
+        Submitted; the form of Corollary 1 with the constant named.  It is the development's
+        HalvingConvention.simpleProportionCorollary_littlewood_prose restated over Mathlib alone,
+        with eta universally quantified and the positivity of the constant added as a hypothesis.
+    - source: "Corollary 1 (cor:simpmain), the source's sentence with nothing named"
+      lean: "ZeroDensityShortIntervals.positive_proportion"
+      module: "Solution"
+      status: "proved, conditionally"
+      note: >-
+        Submitted.  The same content as positive_proportion_in_middle_band with the constant
+        existentially quantified, which is what the source's prose literally says: for every alpha
+        in (0, 1/6) there are C > 0, h0 and t0 with the proportion exceeding C on every larger
+        window.  Stated separately because a reader can check it against the prose without first
+        unfolding CsimpLittlewood.
+    - source: "Corollary 1 (cor:simpmain) at explicit parameters"
+      lean: "ZeroDensityShortIntervals.positive_proportion_sixteenth"
+      module: "Solution"
+      status: "proved, conditionally"
+      note: >-
+        Submitted.  alpha = 1/16, radius r = 1/5, chord index k = 1, where A1 = 4/25 and the
+        limiting constant is 1 - 4*A1 = 9/25 against r = 1/2's 5/21.  Present so that the two
+        statements above are visibly not vacuous; the source's tables give 0.3484 at h0 = 100,
+        t0 = 10^10000, approaching 9/25 from below.
+    - source: "Theorem 2 (thm:main-jensen)"
+      lean: "ZeroDensityShortIntervals.zero_density_jensen"
+      module: "Solution"
+      status: "proved, conditionally"
+      note: >-
+        Submitted.  The development's MainTheorem.mainJensen.  Carries the source's hypothesis
+        t >= e, which is where the collapsed error bracket becomes valid.
+    - source: "Theorem 3 (thm:main-littlewood)"
+      lean: "ZeroDensityShortIntervals.zero_density_littlewood"
+      module: "Solution"
+      status: "proved, conditionally"
+      note: >-
+        Submitted.  The development's MainTheorem.mainLittlewood.  Carries the source's hypothesis
+        t >= e^e for the same reason, and additionally that zeta not vanish on the two horizontal
+        edges of the enlarged window.
+    - source: "Corollary 4 (cor:main-jensen)"
+      lean: "ZeroDensityShortIntervals.edge_proportion_jensen"
+      module: "Solution"
+      status: "proved, conditionally"
+      note: >-
+        Submitted.  The development's HalvingConvention.mainPositiveProportionCorollary_jensen_half,
+        the half-counting form of the corollary.
+    - source: "Corollary 5 (cor:main-littlewood)"
+      lean: "ZeroDensityShortIntervals.edge_proportion_littlewood"
+      module: "Solution"
+      status: "proved, conditionally"
+      note: >-
+        Submitted.  The development's
+        HalvingConvention.mainPositiveProportionCorollary_littlewood_half.  This is what the
+        headline corollary uses.
+    - source: "Theorem 32 (thm:littlewoodshort)"
+      lean: "littlewoodshort"
+      module: "ZerosInShortIntervals.Littlewood.LittlewoodShort"
+      status: "proved, conditionally"
+      note: >-
+        Not submitted.  The Littlewood short-interval theorem, which supplies the coefficients
+        A1..A6 of the submitted Theorem 3.
+    - source: "Theorem 31 (thm:arg-integrals)"
+      lean: "arg_integrals"
+      module: "ZerosInShortIntervals.Littlewood.ArgIntegrals"
+      status: "proved"
+      note: >-
+        Unconditional and axiom-clean: it carries no hypothesis-class binder and depends only on
+        propext, Classical.choice and Quot.sound.  It is the source's own technical contribution
+        and is a candidate for a separate submission.
+    - source: "the factor of two in every proportion statement, left implicit in the source"
+      lean: "zetaOrd_reflect"
+      module: "ZerosInShortIntervals.Reflection"
+      status: "proved"
+      note: >-
+        The reflection rho -> 1 - conj(rho) preserves the order of vanishing of zeta off the real
+        axis, so the two edge strips of a window carry equally many zeros.  Unconditional.  This
+        is what lets the counting statement be read as a statement about a proportion.
+
+acknowledgements: >-
+  Built on Mathlib.  Numerical certificates computed with arb through Sage, and independently with
+  mpmath.  The scripts are in Code/ and each names the statement it certifies.

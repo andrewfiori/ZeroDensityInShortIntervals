@@ -1,0 +1,21 @@
+.lake/
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.bbl
+*.blg
+*.nav
+*.snm
+*.toc
+*.vrb
+
+# Built PDFs of the slides and of the journal/preprint drafts.  The paper's own
+# ZerosInShortIntervals.pdf is tracked deliberately; these are not.
+Talk-ZerosInShortIntervals.pdf
+ZerosInShortIntervals-CJM.pdf
+ZerosInShortIntervals-arXiv.pdf
+
+# Sage preparser output and Python bytecode
+__pycache__/
+*.pyc
